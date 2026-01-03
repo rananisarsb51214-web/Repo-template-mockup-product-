@@ -1,3 +1,4 @@
+
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -27,6 +28,7 @@ export interface GeneratedMockup {
   createdAt: number;
   layers?: PlacedLayer[]; // Store layout used
   productId?: string;
+  isARResult?: boolean;
 }
 
 export type AppView = 'dashboard' | 'assets' | 'studio' | 'gallery' | 'try-on';

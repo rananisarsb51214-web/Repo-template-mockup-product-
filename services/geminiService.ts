@@ -1,3 +1,4 @@
+
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -21,11 +22,9 @@ export const generateMockup = async (
   instruction: string
 ): Promise<string> => {
   try {
-    // Create instance here to get latest key
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const model = 'gemini-3-pro-image-preview';
 
-    // 1. Add Product Base
     const parts: any[] = [
       {
         inlineData: {
@@ -35,7 +34,6 @@ export const generateMockup = async (
       },
     ];
 
-    // 2. Add All Logos
     let layoutHints = "";
     layers.forEach((layer, index) => {
       parts.push({
@@ -45,23 +43,23 @@ export const generateMockup = async (
         },
       });
 
-      // Construct simple positioning hint (assuming 0,0 is top-left)
       const vPos = layer.placement.y < 33 ? "top" : layer.placement.y > 66 ? "bottom" : "center";
       const hPos = layer.placement.x < 33 ? "left" : layer.placement.x > 66 ? "right" : "center";
       
-      layoutHints += `\n- Logo ${index + 1}: Place at ${vPos}-${hPos} area (approx coords: ${Math.round(layer.placement.x)}% x, ${Math.round(layer.placement.y)}% y). Scale: ${layer.placement.scale}.`;
+      layoutHints += `\n- Logo ${index + 1}: Render at ${vPos}-${hPos} (relative coordinates: ${Math.round(layer.placement.x)}%, ${Math.round(layer.placement.y)}%). Applied Scale: ${layer.placement.scale.toFixed(2)}.`;
     });
 
-    // 3. Add Instructions
     const finalPrompt = `
-    User Instructions: ${instruction}
+    User Instructions: ${instruction || "Place the logo naturally."}
     
-    Layout Guidance based on user's rough placement on canvas:
+    Spatial Layout Hints:
     ${layoutHints}
 
-    System Task: Composite the provided logo images (images 2-${layers.length + 1}) onto the first image (the product) to create a realistic product mockup. 
-    Follow the Layout Guidance for positioning if provided, but prioritize realistic surface warping, lighting, and perspective blending.
-    Output ONLY the resulting image.
+    System Directives: 
+    1. Composite the provided graphics (images 2-${layers.length + 1}) onto the primary product (image 1).
+    2. Maintain realistic physical integration: apply displacement maps based on product surface texture (wrinkles, curves, fabric weave).
+    3. Match environmental lighting, shadows, and perspective accurately.
+    4. Output the final photo-realistic image ONLY.
     `;
 
     parts.push({ text: finalPrompt });
@@ -71,6 +69,9 @@ export const generateMockup = async (
       contents: { parts },
       config: {
         responseModalities: [Modality.IMAGE],
+        imageConfig: {
+          imageSize: "1K"
+        }
       },
     });
 
@@ -82,10 +83,9 @@ export const generateMockup = async (
             }
         }
     }
-    throw new Error("No image data found in response");
-
+    throw new Error("Empty visualization returned");
   } catch (error) {
-    console.error("Mockup generation failed:", error);
+    console.error("Mockup engine error:", error);
     throw error;
   }
 };
@@ -99,8 +99,8 @@ export const generateAsset = async (prompt: string, type: 'logo' | 'product'): P
     const model = 'gemini-3-pro-image-preview';
     
     const enhancedPrompt = type === 'logo' 
-        ? `A high-quality, professional vector-style logo design of a ${prompt}. Isolated on a pure white background. Minimalist and clean, single distinct logo.`
-        : `Professional studio product photography of a single ${prompt}. Ghost mannequin style or flat lay. Front view, isolated on neutral background. High resolution, photorealistic. Single object only, no stacks, no duplicates.`;
+        ? `A world-class minimalist logo design of a ${prompt}. Single icon isolated on a pure white background. Modern, sleek, professional vector style. High contrast.`
+        : `A professional commercial studio photograph of a ${prompt}. Photorealistic, front view, 8k resolution, cinematic lighting, isolated on a neutral gray studio backdrop. Perfect geometry.`;
 
     const response = await ai.models.generateContent({
         model,
@@ -120,10 +120,9 @@ export const generateAsset = async (prompt: string, type: 'logo' | 'product'): P
             }
         }
     }
-     throw new Error("No image generated");
-
+    throw new Error("Asset generation engine failed");
    } catch (error) {
-       console.error("Asset generation failed:", error);
+       console.error("Asset generation error:", error);
        throw error;
    }
 }
@@ -133,7 +132,7 @@ export const generateAsset = async (prompt: string, type: 'logo' | 'product'): P
  */
 export const generateRealtimeComposite = async (
     compositeImageBase64: string,
-    prompt: string = "Make this look like a real photo"
+    prompt: string = "Ensure lighting and perspective match"
   ): Promise<string> => {
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -147,11 +146,12 @@ export const generateRealtimeComposite = async (
           },
         },
         {
-          text: `Input is a rough AR composite. Task: ${prompt}. 
-          Render the overlaid object naturally into the scene. 
-          Match the lighting, shadows, reflections, and perspective of the background. 
-          Keep the background largely as is, but blend the object seamlessly.
-          Output ONLY the resulting image.`,
+          text: `The input is a rough augmented reality preview. 
+          Task: ${prompt}. 
+          Refine the composite to be indistinguishable from a real photo. 
+          Seamlessly blend the overlaid object by matching the background's grain, focal depth, lighting temperature, and contact shadows. 
+          Maintain the object's identity while integrating it physically into the scene.
+          Return ONLY the final rendered image.`,
         },
       ];
   
@@ -160,6 +160,9 @@ export const generateRealtimeComposite = async (
         contents: { parts },
         config: {
           responseModalities: [Modality.IMAGE],
+          imageConfig: {
+            imageSize: "1K"
+          }
         },
       });
   
@@ -171,10 +174,9 @@ export const generateRealtimeComposite = async (
               }
           }
       }
-      throw new Error("No image data found in response");
-  
+      throw new Error("Composite refinement failed");
     } catch (error) {
-      console.error("AR Composite generation failed:", error);
+      console.error("Reality blend error:", error);
       throw error;
     }
   };

@@ -1,5 +1,7 @@
 {
-  "name": "Copy of Product Mockup Visualization",
-  "description": "A professional design studio that generates photo realistic product mock-ups from uploaded or AI created assets.",
-  "requestFramePermissions": []
+  "name": "SKU Mockup Foundry",
+  "description": "A professional design studio that generates photo realistic product mock-ups from uploaded or AI created assets, featuring an AI-powered AR try-on.",
+  "requestFramePermissions": [
+    "camera"
+  ]
 }
